@@ -80,8 +80,6 @@ class AnimalHome(Resource):
         target_enclousre = my_zoo.getEnclosure(enclosure_id)
         if not target_enclousre:
             return jsonify(f"Enclosure {enclosure_id} doesn't exist")
-        # target_animal = my_zoo.getAnimal(animal_id)
-        # target_enclosure = my_zoo.getEnclosure(enclosure_id)
         return my_zoo.home(animal_id, enclosure_id)
 
 mother_parser = reqparse.RequestParser()
@@ -92,7 +90,6 @@ class Birth(Resource):
     def post(self):
         args = mother_parser.parse_args()
         mother_id = args['mother_id']
-
         return my_zoo.birth(mother_id)
 
 death_parser = reqparse.RequestParser()
@@ -103,15 +100,12 @@ class Death(Resource):
     def post(self):
         args = death_parser.parse_args()
         animal_id = args['animal_id']
-        animal = my_zoo.getAnimal(animal_id)
-
-        return my_zoo.removeAnimal(animal)
+        return my_zoo.death(animal_id)
 
 @zooma_api.route('/animal/stat')
 class AnimalStats(Resource):
     def get(self):
         return my_zoo.animalStats()
-
 
 # ---------------------------------------------------------------
 # for ENCLOSURES
@@ -152,7 +146,6 @@ class GetEnclosureAnimals(Resource):
         animal_list = []
         for animal in animals:
             animal_list.append(my_zoo.getAnimal(animal))
-
         return jsonify(animal_list)
 
 @zooma_api.route('/enclosure/<enclosure_id>')
@@ -199,7 +192,6 @@ class CareTaker(Resource):
             return jsonify(f"Animal with ID: '{animal_id}' was not found!")
         elif not employee:
             return jsonify(f"Employee with ID: '{employee_id}' was not found!")
-
         return my_zoo.careTaker(employee_id,animal_id)
 
 @zooma_api.route('/employee/<employee_id>/care/animals')
@@ -210,7 +202,6 @@ class EmployeeAnimals(Resource):
         for animal in employee.animals:
             ani = my_zoo.getAnimal(animal)
             animal_list.append(ani)
-
         return jsonify(animal_list)
 
 @zooma_api.route('/employee/<employee_id>')
@@ -219,7 +210,6 @@ class DeleteEmployee(Resource):
         employee = my_zoo.getEmployee(employee_id)
         if not employee:
             return jsonify(f"That employee {employee_id} was not found")
-
         return my_zoo.deleteEmployee(employee_id)
 
 @zooma_api.route('/employee/stats')
@@ -242,14 +232,6 @@ class MedicalSchedule(Resource):
 class FeedingSchedule(Resource):
     def get(self):
         return my_zoo.feedingSchedule()
-
-
-
-
-
-
-
-
 
 
 if __name__ == '__main__':

@@ -52,23 +52,15 @@ class Animal:
             # if the last vet record is the same date as the next check up, then
             # it shouldn't be checked again
             if vet_record != str(self.next_check_up):
-                # return jsonify(f"Animal {self.animal_id} has already been checked up,"
-                #                f" next check up on {self.next_check_up}")
-                print("Animal already checked")
+                return jsonify(f"Animal {self.animal_id} has already been checked up,"
+                               f" next check up on {self.next_check_up}")
             else: # if vet record is either next_check_up or another date
                 self.vet_record.append(today)
                 self.next_check_up = today + datetime.timedelta(days=3)
-                # return jsonify(f"Animal {self.animal_id} is being checked up,"
-                #                f" next check up on {self.next_check_up}")
-                print("Animal being checked")
+                return jsonify(f"Animal {self.animal_id} is being checked up,"
+                               f" next check up on {self.next_check_up}")
         else: # if vet record is either next_check_up or another date
             self.vet_record.append(today)
             self.next_check_up = today + datetime.timedelta(days=3)
-            # return jsonify(f"Animal {self.animal_id} is being checked up,"
-            #                f" next check up on {self.next_check_up}")
-            print("Animal is being checked")
-# a = Animal("asd","asd",12)
-#
-# a.vet()
-# a.vet()
-# print(a.vet_record)
+            return jsonify(f"Animal {self.animal_id} is being checked up,"
+                           f" next check up on {self.next_check_up}")
