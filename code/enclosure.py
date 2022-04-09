@@ -11,6 +11,7 @@ class Enclosure:
         # YYYY-MM-DD
         # HH:MM:SS
         self.next_clean = None
+        self.diff_species = 0
 
 # e = Enclosure("asd", 12)
 # e.clean_record.append(datetime.datetime.now())

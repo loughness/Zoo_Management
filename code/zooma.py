@@ -77,6 +77,9 @@ class AnimalHome(Resource):
     def post(self, animal_id):
         args = home_parser.parse_args()
         enclosure_id = args['enclosure_id']
+        target_enclousre = my_zoo.getEnclosure(enclosure_id)
+        if not target_enclousre:
+            return jsonify(f"Enclosure {enclosure_id} doesn't exist")
         # target_animal = my_zoo.getAnimal(animal_id)
         # target_enclosure = my_zoo.getEnclosure(enclosure_id)
         return my_zoo.home(animal_id, enclosure_id)
@@ -158,9 +161,11 @@ class deleteEnclosure(Resource):
         enclosure = my_zoo.getEnclosure(enclosure_id)
         if not enclosure:
             return jsonify(f"Enclosure with ID {enclosure_id} was not found")
-        my_zoo.removeEnclosure(enclosure_id)
-        return jsonify(f"Enclosure with ID {enclosure_id} has been removed.")
-
+        if len(my_zoo.enclosures) == 1:
+            return jsonify("There is only one enclosure, the animals will not have anywhere to live if you get rid of this one")
+        if enclosure.animals == []:
+            my_zoo.removeEnclosure(enclosure_id)
+            return jsonify("Enclosure was removed")
 
 # ---------------------------------------------------------------
 # for EMPLOYEES
@@ -189,11 +194,11 @@ class CareTaker(Resource):
         employee = my_zoo.getEmployee(employee_id)
         animal = my_zoo.getAnimal(animal_id)
         if not employee and not animal:
-            return jsonify(f"Animal with ID: '{animal_id}', and Enclosure with ID: '{employee_id}' were not found!")
+            return jsonify(f"Animal with ID: '{animal_id}', and Employee with ID: '{employee_id}' were not found!")
         elif not animal:
             return jsonify(f"Animal with ID: '{animal_id}' was not found!")
         elif not employee:
-            return jsonify(f"Enclosure with ID: '{employee_id}' was not found!")
+            return jsonify(f"Employee with ID: '{employee_id}' was not found!")
 
         return my_zoo.careTaker(employee_id,animal_id)
 
@@ -232,6 +237,11 @@ class CleaningSchedule(Resource):
 class MedicalSchedule(Resource):
     def get(self):
         return my_zoo.medicalSchedule()
+
+@zooma_api.route('/tasks/feeding')
+class FeedingSchedule(Resource):
+    def get(self):
+        return my_zoo.feedingSchedule()
 
 
 

@@ -11,6 +11,14 @@ class Zoo:
         self.animals = []
         self.enclosures = []
         self.employees = []
+        self.emp_min_animals = 0
+        self.emp_max_animals = 0
+        self.ave_animals = 0
+        self.ave_num_of_animals_per_enclosure = 0
+        self.enclo_with_diff_species = 0
+        self.avail_space_per_animal = 0
+        self.num_ani_per_species = {}
+
 
 # ---------------------------------------
 #               Animal
@@ -28,17 +36,21 @@ class Zoo:
 
     def home(self, animal_id, enclosure_id):
         current_animal = self.getAnimal(animal_id)
-        for animal in self.animals:
-            if animal.animal_id == animal_id:
-                if current_animal.enclosure:
-                    old_enclosure_id = animal.enclosure
-                    old_enclosure = self.getEnclosure(old_enclosure_id)
-                    old_enclosure.animals.remove(animal_id)
-                for enclosure in self.enclosures:
-                    if enclosure.enclosure_id == enclosure_id:
-                        enclosure.animals.append(animal_id)
-                        animal.enclosure = enclosure_id
-                        return jsonify(animal_id,enclosure_id)
+        if self.enclosures == []:
+            return jsonify("There aren't any enclosures to assign animals to")
+        else:
+            for animal in self.animals:
+                if animal.animal_id == animal_id:
+                    if current_animal.enclosure:
+                        old_enclosure_id = animal.enclosure
+                        old_enclosure = self.getEnclosure(old_enclosure_id)
+                        old_enclosure.animals.remove(animal_id)
+                    for enclosure in self.enclosures:
+                        if enclosure.enclosure_id == enclosure_id:
+                            enclosure.animals.append(animal_id)
+                            animal.enclosure = enclosure_id
+                            return jsonify(f"Animal {animal_id} is now in enclosure {enclosure_id}")
+                            print("home sorted")
 
     def birth(self, mother_id):
         mother = self.getAnimal(mother_id)
@@ -51,12 +63,15 @@ class Zoo:
             enclosure_id = mother.enclosure
             self.home(new_born.animal_id, enclosure_id)
         return jsonify(new_born)
+        print("Baby born")
 
     def death(self,animal_id):
         animal = self.getAnimal(animal_id)
         if animal.enclosure:
             enclosure_id = animal.enclosure
             self.leaveEnclosure(animal_id,enclosure_id)
+        else:
+            pass
 
         self.removeAnimal(animal)
         return jsonify(f"Animal {animal_id} has left the building...")
@@ -77,29 +92,51 @@ class Zoo:
         num_enclosures = len(self.enclosures)
         num_animals = len(self.animals)
         ave_num_animals_per_enclosure = num_animals / num_enclosures
+        self.ave_num_of_animals_per_enclosure = ave_num_animals_per_enclosure # setting for test purposes
         # print(ave_num_animals_per_enclosure, " Number of animals per enclosure")
 
         # number of enclosures with different species and the available space left
         enclo_list = []
         diff_species = []
+        species_set = set()
         available_space = {}
+        enclo_species_counter = 0
         for enclosure in self.enclosures:
             enclo_list.append(enclosure.enclosure_id)
             species_counter = 0
-            available_space.update({enclosure.enclosure_id: round(enclosure.area / len(enclosure.animals))})
+            try:
+                available_space.update({enclosure.enclosure_id: round(enclosure.area / len(enclosure.animals))})
+                self.avail_space_per_animal = (round(enclosure.area / len(enclosure.animals)))
+            except ZeroDivisionError:
+                available_space.update({enclosure.enclosure_id: enclosure.area})
+                self.avail_space_per_animal = enclosure.area
             for animal in enclosure.animals:
                 animal = self.getAnimal(animal) # returns full ANIMAL
                 ani_species = animal.species_name
-                species_set = set()# this might not be the best place to put it
+                if ani_species not in self.num_ani_per_species.keys():
+                    self.num_ani_per_species.update({f'{ani_species}': 1})
+                else:
+                    self.num_ani_per_species[f'{ani_species}'] += 1
+                # this might not be the best place to put it
                 species_set.add(ani_species)
-                species_counter = len(species_set)
-            if species_counter > 1:
-                diff_species.append(species_counter)
+                # species_counter = len(species_set)
+            # if species_counter > 1:
+            #     diff_species.append(species_counter)
+            #     self.num_of_diff_species = species_counter # setting for test purposes
+            enclosure.diff_species = len(species_set)
+            if enclosure.diff_species > 1 :
+                enclo_species_counter +=1
+                self.enclo_with_diff_species = enclo_species_counter
+            else:
+                self.enclo_with_diff_species = 0
+
+
         # print(f"The number of enclosures with multiple species is {len(diff_species)}")
         # print(f"The available space per animal is {available_space}")
 
-        return jsonify(f"The average number of animals per enclosure is: {ave_num_animals_per_enclosure}, "
-                       f"the number of enclosures with multiple species is: {len(diff_species)}, "
+        return jsonify(f"The total number of animals per species is: {self.num_ani_per_species}"
+                       f"The average number of animals per enclosure is: {ave_num_animals_per_enclosure}, "
+                       f"the number of enclosures with multiple species is: {enclo_species_counter}, "
                        f"the available space per animal in each enclosure is: {available_space}")
 
         # available space per animal in enclosure
@@ -119,42 +156,49 @@ class Zoo:
 
     def careTaker(self, employee_id, animal_id):
         animal = self.getAnimal(animal_id)
-        if animal.care_taker == None:
-            animal.care_taker = employee_id
+        if self.employees == []:
+            return jsonify("There aren't any employees, hire some more before assignment")
         else:
-            old_careTaker_id = animal.care_taker
-            old_careTaker = self.getEmployee(old_careTaker_id)
-            old_careTaker.animals.remove(animal_id)
-            animal.care_taker = employee_id
+            if animal.care_taker == None:
+                animal.care_taker = employee_id
+            else:
+                old_careTaker_id = animal.care_taker
+                old_careTaker = self.getEmployee(old_careTaker_id)
+                old_careTaker.animals.remove(animal_id)
+                animal.care_taker = employee_id
 
-        employee = self.getEmployee(employee_id)
-        employee.animals.append(animal_id)
+            employee = self.getEmployee(employee_id)
+            employee.animals.append(animal_id)
 
-        return jsonify(f"Employee {employee_id} now takes care of animal {animal_id}")
+            return jsonify(f"Employee {employee_id} now takes care of animal {animal_id}")
 
     def deleteEmployee(self,employee_id):
         employee = self.getEmployee(employee_id)
-        if len(self.employees) > 1:
-            if employee.animals:
-                animal_list = []
-                for animal in employee.animals:
-                    animal_list.append(animal) # animal ID
-                    # assign animals new care taker
-
-                self.employees.remove(employee)
-                new_care_taker = random.choice(self.employees)
-                for animal in animal_list:
-                    ani = self.getAnimal(animal)
-                    ani.care_taker = new_care_taker.employee_id
-                    # assigning animals to caretaker
-                    new_care_taker.animals.append(animal)
-            return jsonify(f"Employee {employee_id} was removed!")
-
+        if len(self.employees) == 1:
+            return jsonify("You only have one employee, "
+                           "you cannot delete this one otherwise the animals will be left unattended")
         else:
-            self.employees.remove(employee)
-            return jsonify(f"Employee {employee_id} was removed!")
+            if len(self.employees) > 1:
+                if employee.animals:
+                    animal_list = []
+                    for animal in employee.animals:
+                        animal_list.append(animal) # animal ID
+                        # assign animals new care taker
 
-        return jsonify(f"Employee {employee_id} was removed!")
+                    self.employees.remove(employee)
+                    new_care_taker = random.choice(self.employees)
+                    for animal in animal_list:
+                        ani = self.getAnimal(animal)
+                        ani.care_taker = new_care_taker.employee_id
+                        # assigning animals to caretaker
+                        new_care_taker.animals.append(animal)
+                return jsonify(f"Employee {employee_id} was removed!")
+
+            else:
+                self.employees.remove(employee)
+                return jsonify(f"Employee {employee_id} was removed!")
+
+            return jsonify(f"Employee {employee_id} was removed!")
 
 
     def employeeStats(self):
@@ -172,12 +216,15 @@ class Zoo:
         emp_with_min_animals = min(totes,key=totes.get)
         # getting the corresponding minimum values of animals
         min_value = totes[emp_with_min_animals]
+        self.emp_min_animals = min_value # setting for test purposes
         # getting the employee with the most amount of aimals
         emp_with_max_animals = max(totes,key=totes.get)
         # getting the corresponding max value of animals
         max_value = totes[emp_with_max_animals]
+        self.emp_max_animals = max_value # setting for test purposes
         # getting the average amount of animals
         ave_num_animals = sum(ani_len) / len(ani_len)
+        self.ave_animals = ave_num_animals # setting for test purposes
 
         return jsonify(f"The employee with the least amount of animals is {emp_with_min_animals} and has {min_value}, "
                        f"the employee with the most amount of animals is {emp_with_max_animals} and has {max_value},"
@@ -213,12 +260,13 @@ class Zoo:
     def removeEnclosure(self, enclosure_id):
         enclosure = self.getEnclosure(enclosure_id)
         if len(self.enclosures) > 1:
-            if enclosure.animals:
+            if enclosure.animals != []:
                 animal_list = []
                 for animal in enclosure.animals:
                     # making list of animals for the next enclosure
                     animal_list.append(animal)
                     # assign new enclosure its new animals
+                print("About to delete")
                 self.enclosures.remove(enclosure)
                 new_enclosure = random.choice(self.enclosures)
                 for animal in animal_list:
@@ -231,19 +279,12 @@ class Zoo:
                     # assigning a home to each animal(ID)
                     ani = self.getAnimal(animal)
                     ani.enclosure = new_enclosure.enclosure_id
-
-        else:
+        if enclosure.animals == []:
             self.enclosures.remove(enclosure)
 
-        return jsonify(f"Enclosure {enclosure_id} was removed!")
+        # return jsonify(f"Enclosure {enclosure_id} was removed!")
+        # print("Enclosure removed")
 
-    def clean(self, enclosure_id):
-        enclosure = self.getEnclosure(enclosure_id)
-        clean = datetime.datetime.now().date()
-        enclosure.clean_record.append(clean)
-        next_clean = clean + datetime.timedelta(days=3)
-        enclosure.next_clean = next_clean
-        return jsonify(f"Enclosure {enclosure_id} was cleaned, next cleaning will be on {next_clean}")
 
     def clean(self, enclosure_id):
         enclosure = self.getEnclosure(enclosure_id)
@@ -284,7 +325,7 @@ class Zoo:
                 enclosure.next_clean = next_cleaning
                 cleaning_list.append(f"The next cleaning time for {enclosure.enclosure_id} is {enclosure.next_clean}")
                 # next_cleaning = next_cleaning.datetime.date()
-                # return jsonify(cleaning_list)
+                return jsonify(cleaning_list)
 
             else:
                 # This means the next_clean will have something
@@ -304,8 +345,23 @@ class Zoo:
                 medical_list.append(f"The next check up for {animal.animal_id} is {animal.next_check_up}")
             else:
                 next_checkup = animal.next_check_up
-                medical_list.append(f"The next feed for {animal.animal_id} is {next_checkup}")
+                medical_list.append(f"The next check for {animal.animal_id} is {next_checkup}")
         return (medical_list)
+
+    def feedingSchedule(self):
+        feeding_list = []
+        for animal in self.animals:
+            # getting the feeding date
+            if animal.feeding_record == []:
+                # the next feed will be NONE
+                next_feeding = datetime.datetime.now().date()
+                animal.next_feed = next_feeding
+                feeding_list.append(f"The next feeding time for {animal.animal_id} is {animal.next_feed}")
+            else:
+                next_feeding = animal.next_feed
+                feeding_list.append(f"The next feeding time for {animal.animal_id} is {next_feeding }")
+            return (feeding_list)
+
 
 # zoo = Zoo()
 # e = Employee("Liam", "vienna")

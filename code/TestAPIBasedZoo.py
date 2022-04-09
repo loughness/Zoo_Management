@@ -8,15 +8,14 @@ def baseURL ():
 
 @pytest.fixture
 def zooWithOneAnimal(baseURL):
-    requests.post (baseURL+"/animal", {"species":"tiger", "name":"btiger", "age":3})
+    requests.post(baseURL+"/animal", {"species":"tiger", "name":"btiger", "age":3})
     response = requests.get(baseURL + "/animals")
 
-    return response.content
+    assert response.content
 
 def test_zoo1 (zooWithOneAnimal):
     jo = json.loads(zooWithOneAnimal)
-
-    print (jo)
+    print(jo)
 
     assert jo[0]["common_name"] =="btiger"
     assert (len(jo) == 1)
