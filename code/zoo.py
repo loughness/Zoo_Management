@@ -217,7 +217,7 @@ class Zoo:
             return jsonify(f"Employee {employee_id} was removed!")
 
     def loseAnimal(self, employee_id, animal_id):
-        # used in conjuction with the death of an animal
+        # used in conjunction with the death of an animal
         # removing animal from care taker
         employee = self.getEmployee(employee_id)
         employee.animals.remove(animal_id)
@@ -304,7 +304,6 @@ class Zoo:
         # if the enclosure never had any animals
         if enclosure.animals == []:
             self.enclosures.remove(enclosure)
-
         return jsonify(f"Enclosure {enclosure_id} was removed!")
 
     def clean(self, enclosure_id):
@@ -346,7 +345,6 @@ class Zoo:
                 cleaning_list.append(f"The next cleaning time for {enclosure.enclosure_id} is {enclosure.next_clean}")
                 # next_cleaning = next_cleaning.datetime.date()
                 return jsonify(cleaning_list)
-
             else:
                 # This means the next_clean will have something
                 # therefore the next_clean in enclosure will have the next clean

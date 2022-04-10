@@ -2,13 +2,11 @@ from flask import Flask, jsonify
 from flask_restx import Api, reqparse, Resource
 from zoo_json_utils import ZooJsonEncoder 
 from zoo import Zoo
-
 from animal import Animal
 from enclosure import Enclosure
 from employee import Employee
 
 my_zoo = Zoo()
-
 zooma_app = Flask(__name__)
 # need to extend this class for custom objects, so that they can be jsonified
 zooma_app.json_encoder = ZooJsonEncoder 
