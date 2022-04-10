@@ -15,8 +15,7 @@ class Animal:
         self.next_check_up = None
         self.next_feed = None
         self.area_needed = 28 # minimum space needed per animal
-        # add more as required here 
-        
+
     # simply store the current system time when this method is called    
     def feed(self):
         # getting todays date for check

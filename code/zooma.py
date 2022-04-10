@@ -78,6 +78,9 @@ class AnimalHome(Resource):
         args = home_parser.parse_args()
         enclosure_id = args['enclosure_id']
         target_enclousre = my_zoo.getEnclosure(enclosure_id)
+        target_animal = my_zoo.getAnimal(animal_id)
+        if not target_animal:
+            return jsonify(f"Animal {animal_id} doesn't exist")
         if not target_enclousre:
             return jsonify(f"Enclosure {enclosure_id} doesn't exist")
         return my_zoo.home(animal_id, enclosure_id)
@@ -90,6 +93,9 @@ class Birth(Resource):
     def post(self):
         args = mother_parser.parse_args()
         mother_id = args['mother_id']
+        target_animal = my_zoo.getAnimal(mother_id)
+        if not target_animal:
+            return jsonify(f"Animal {mother_id} doesn't exist")
         return my_zoo.birth(mother_id)
 
 death_parser = reqparse.RequestParser()
@@ -100,6 +106,9 @@ class Death(Resource):
     def post(self):
         args = death_parser.parse_args()
         animal_id = args['animal_id']
+        target_animal = my_zoo.getAnimal(animal_id)
+        if not target_animal:
+            return jsonify(f"Animal {animal_id} doesn't exist")
         return my_zoo.death(animal_id)
 
 @zooma_api.route('/animal/stat')
@@ -198,6 +207,8 @@ class CareTaker(Resource):
 class EmployeeAnimals(Resource):
     def get(self,employee_id):
         employee = my_zoo.getEmployee(employee_id)
+        if not employee:
+            return jsonify(f"Employee {employee_id} was not found")
         animal_list = []
         for animal in employee.animals:
             ani = my_zoo.getAnimal(animal)

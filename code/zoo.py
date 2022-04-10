@@ -7,7 +7,7 @@ from employee import Employee
 from collections import Counter
 
 class Zoo:
-    def __init__ (self): 
+    def __init__ (self):
         self.animals = []
         self.enclosures = []
         self.employees = []
@@ -19,20 +19,21 @@ class Zoo:
         self.avail_space_per_animal = 0
         self.num_ani_per_species = {}
 
-
 # ---------------------------------------
 #               Animal
 # ---------------------------------------
-    def addAnimal(self, animal): 
+    def addAnimal(self, animal):
         self.animals.append(animal)
-        
-    def removeAnimal(self, animal): 
-        self.animals.remove(animal) 
-    
-    def getAnimal(self, animal_id): 
-        for animal in self.animals: 
-            if animal.animal_id == animal_id: 
+
+    def removeAnimal(self, animal):
+        self.animals.remove(animal)
+
+    def getAnimal(self, animal_id):
+        for animal in self.animals:
+            if animal.animal_id == animal_id:
                 return animal
+            else:
+                return jsonify("Animal not found")
 
     def home(self, animal_id, enclosure_id):
         # getting the target animal
@@ -90,62 +91,65 @@ class Zoo:
         return jsonify(f"Animal {animal_id} has left the building...")
 
     def animalStats(self):
-        # getting animals per species
-        species_list = []
-        for animal in self.animals:
-            species = animal.species_name
-            species_list.append(species)
+        if self.animals == [] or self.enclosures == []:
+            return jsonify("There aren't enough entries to calculate statistics yet")
+        else:
+            # getting animals per species
+            species_list = []
+            for animal in self.animals:
+                species = animal.species_name
+                species_list.append(species)
 
-        tally_species = dict(Counter(species_list))
-        tally_species = str(tally_species).replace("{","")
-        tally_species = str(tally_species).replace("}", "")
-        print(tally_species)
+            tally_species = dict(Counter(species_list))
+            tally_species = str(tally_species).replace("{","")
+            tally_species = str(tally_species).replace("}", "")
+            print(tally_species)
 
-        # getting average number of animals in enclosures
-        num_enclosures = len(self.enclosures)
-        num_animals = len(self.animals)
-        ave_num_animals_per_enclosure = num_animals / num_enclosures
-        self.ave_num_of_animals_per_enclosure = ave_num_animals_per_enclosure # setting for test purposes
+            # getting average number of animals in enclosures
+            num_enclosures = len(self.enclosures)
+            num_animals = len(self.animals)
+            ave_num_animals_per_enclosure = num_animals / num_enclosures
+            self.ave_num_of_animals_per_enclosure = ave_num_animals_per_enclosure # setting for test purposes
 
-        # number of enclosures with different species and the available space left
-        enclo_list = []
-        diff_species = []
-        species_set = set()
-        available_space = {}
-        enclo_species_counter = 0
-        for enclosure in self.enclosures:
-            enclo_list.append(enclosure.enclosure_id)
-            species_counter = 0
-            try:
-                available_space.update({enclosure.enclosure_id: round(enclosure.area / len(enclosure.animals))})
-                self.avail_space_per_animal = (round(enclosure.area / len(enclosure.animals)))
-            except ZeroDivisionError:
-                available_space.update({enclosure.enclosure_id: enclosure.area})
-                self.avail_space_per_animal = enclosure.area
-            for animal in enclosure.animals:
-                animal = self.getAnimal(animal) # returns full ANIMAL
-                ani_species = animal.species_name
-                if ani_species not in self.num_ani_per_species.keys():
-                    self.num_ani_per_species.update({f'{ani_species}': 1})
+            # number of enclosures with different species and the available space left
+            enclo_list = []
+            diff_species = []
+            species_set = set()
+            available_space = {}
+            enclo_species_counter = 0
+            for enclosure in self.enclosures:
+                enclo_list.append(enclosure.enclosure_id)
+                species_counter = 0
+                try:
+                    available_space.update({enclosure.enclosure_id: round(enclosure.area / len(enclosure.animals))})
+                    self.avail_space_per_animal = (round(enclosure.area / len(enclosure.animals)))
+                except ZeroDivisionError:
+                    available_space.update({enclosure.enclosure_id: enclosure.area})
+                    self.avail_space_per_animal = enclosure.area
+                for animal in enclosure.animals:
+                    animal = self.getAnimal(animal) # returns full ANIMAL
+                    ani_species = animal.species_name
+                    if ani_species not in self.num_ani_per_species.keys():
+                        self.num_ani_per_species.update({f'{ani_species}': 1})
+                    else:
+                        self.num_ani_per_species[f'{ani_species}'] += 1
+                    # this might not be the best place to put it
+                    species_set.add(ani_species)
+                    # species_counter = len(species_set)
+                # if species_counter > 1:
+                #     diff_species.append(species_counter)
+                #     self.num_of_diff_species = species_counter # setting for test purposes
+                enclosure.diff_species = len(species_set)
+                if enclosure.diff_species > 1 :
+                    enclo_species_counter +=1
+                    self.enclo_with_diff_species = enclo_species_counter
                 else:
-                    self.num_ani_per_species[f'{ani_species}'] += 1
-                # this might not be the best place to put it
-                species_set.add(ani_species)
-                # species_counter = len(species_set)
-            # if species_counter > 1:
-            #     diff_species.append(species_counter)
-            #     self.num_of_diff_species = species_counter # setting for test purposes
-            enclosure.diff_species = len(species_set)
-            if enclosure.diff_species > 1 :
-                enclo_species_counter +=1
-                self.enclo_with_diff_species = enclo_species_counter
-            else:
-                self.enclo_with_diff_species = 0
+                    self.enclo_with_diff_species = 0
 
-        return jsonify(f"The total number of animals per species is: {self.num_ani_per_species}"
-                       f"The average number of animals per enclosure is: {ave_num_animals_per_enclosure}, "
-                       f"the number of enclosures with multiple species is: {enclo_species_counter}, "
-                       f"the available space per animal in each enclosure is: {available_space}")
+            return jsonify(f"The total number of animals per species is: {self.num_ani_per_species}"
+                           f"The average number of animals per enclosure is: {ave_num_animals_per_enclosure}, "
+                           f"the number of enclosures with multiple species is: {enclo_species_counter}, "
+                           f"the available space per animal in each enclosure is: {available_space}")
 
 # ---------------------------------------
 #               Employee
@@ -220,6 +224,8 @@ class Zoo:
 
 
     def employeeStats(self):
+        if self.employees == [] or self.animals == []:
+            return jsonify("There aren't enough entries to calculate statistics")
         # lists to hold emp_id's and the amount of animals they look after
         emp_list = []
         ani_len = []
