@@ -126,7 +126,6 @@ def test_enclosure(add_remove_leave_clean_ENCLOSURE,zoo1,animal1,animal2,employe
 # _______________________________________________________
 #               Employee Testing
 # -------------------------------------------------------
-
 @pytest.fixture
 def add_remove_careTake_EMPLOYEE(zoo1,animal1,animal2,employee1,employee2,enclosure1,enclosure2):
     zoo1.addAnimal(animal1)
@@ -143,7 +142,6 @@ def add_remove_careTake_EMPLOYEE(zoo1,animal1,animal2,employee1,employee2,enclos
     # employee 2 now looks after 2 animals
     zoo1.employeeStats()
 
-
 def test_employee(add_remove_careTake_EMPLOYEE,zoo1,animal1,animal2,employee1,employee2,enclosure1,enclosure2):
     assert (len(zoo1.employees)==1)
     assert (len(zoo1.animals)==2)
@@ -153,12 +151,3 @@ def test_employee_stats(add_remove_careTake_EMPLOYEE,zoo1,animal1,animal2,employ
    assert zoo1.emp_min_animals == 2
    assert zoo1.emp_max_animals == 2
    assert zoo1.ave_animals == 2
-
-
-
-
-
-
-
-
-
